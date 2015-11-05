@@ -1,4 +1,4 @@
-//  VELOCIMETRE
+//   pantalles 2
 
 
 // GPS L80 //
@@ -46,6 +46,9 @@ int scrollPosition = -10;
   extern uint8_t MediumNumbers[];
   extern uint8_t BigNumbers[];
 
+int pantalla=0;
+#define boto_dret 2
+#define boto_esquerre 3
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -302,8 +305,11 @@ void Scroll(String message)
       gotoXY(17,2);
       LcdString("GPS L80");   
      
-      gotoXY(10,3);
-      LcdString("velocimetre");   
+      gotoXY(3,3);
+      LcdString("pantalles 2");   
+      
+      pinMode(boto_dret, INPUT);
+      pinMode(boto_esquerre, INPUT);
       
     }
 
@@ -347,9 +353,12 @@ void Scroll(String message)
         Serial.println(gps.time.second());
         Serial.println("---------------------------");
        
-// imprimint al lcd la primera pantalla amb la velocitat 
 
         LcdClear();
+
+        if (digitalRead(boto_dret)==HIGH) { pantalla=1; }
+        if (digitalRead(boto_esquerre)==HIGH) { pantalla=0;} 
+        
         
     gotoXY(14,5);
 //    LcdString("hora ");
@@ -372,7 +381,27 @@ void Scroll(String message)
     char sats [10];  //="12345";
     sprintf (sats, "%i", gps.satellites.value());
     LcdString(sats);
-/*      
+
+    
+    switch (pantalla) {
+    case 0:
+// imprimint al lcd la primera pantalla amb la velocitat 
+
+    gotoXY(0,3);  
+    LcdString("Km/h:    ");
+    char VELOCITAT [3];
+    dtostrf(gps.speed.mps()*3.3,3,0,VELOCITAT);     // km/h   //    dtostrf(gps.speed.mps(),7,0,velocitat);     // metres per segon
+    myGLCD.setFont(BigNumbers);                    
+    myGLCD.print(String (VELOCITAT), 42, 15);    //    myGLCD.print(String velocitat, int x, int y);
+                                                  // void	print(char *st, int x, int y);
+                                                  // void	print(String st, int x, int y);
+                                                  // void	printNumI(long num, int x, int y, int length=0, char filler=' ');
+                                                  // printNumF(double num, byte dec, int x, int y, char divider='.', int length=0, char    gotoXY(14,5);
+     break;
+
+     case 1:
+// imprimint al lcd la segona pantalla amb totes les dades
+      
     gotoXY(0,1);
     LcdString("lat:");
     char latitud [10];  
@@ -390,19 +419,15 @@ void Scroll(String message)
     char alt [6];
     dtostrf(gps.altitude.meters(),7,0,alt);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
     LcdString(alt);
-*/
+
     gotoXY(0,3);  
     LcdString("Km/h:    ");
     char velocitat [3];
     dtostrf(gps.speed.mps()*3.3,3,0,velocitat);     // km/h   //    dtostrf(gps.speed.mps(),7,0,velocitat);     // metres per segon
     LcdString(velocitat);
-    myGLCD.setFont(BigNumbers);    
-    myGLCD.print(String (velocitat), 42, 15);
-                // void	print(char *st, int x, int y);
-                // void	print(String st, int x, int y);
-                // void	printNumI(long num, int x, int y, int length=0, char filler=' ');
-                // printNumF(double num, byte dec, int x, int y, char divider='.', int length=0, char
-        
+    
+    break;
+    }    
         counter = 0;
         c=1;
        }
