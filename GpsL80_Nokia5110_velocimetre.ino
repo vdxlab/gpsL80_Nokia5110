@@ -1,3 +1,5 @@
+//  VELOCIMETRE
+
 
 // GPS L80 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,24 +18,15 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// BEEPER //
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#include "pitches.h"
-
-#define beeper 7			// Set beeper Pin
-#define led    8			// Set led Pin
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 // LCD //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // The pins to use on the arduino
-#define PIN_RESET 2
-#define PIN_SCE   3
-#define PIN_DC    4
-#define PIN_SDIN  5
-#define PIN_SCLK  6 
+#define PIN_RESET 9
+#define PIN_SCE   8
+#define PIN_DC    7
+#define PIN_SDIN  6
+#define PIN_SCLK  5 
  
 // COnfiguration for the LCD
 #define LCD_C     LOW
@@ -45,6 +38,15 @@
 #define LCD_Y     48
  
 int scrollPosition = -10;
+
+// per jugar amb diferents tamanys de caracters
+#include<LCD5110_Basic.h>
+  LCD5110 myGLCD(5,6,7,9,8);
+  extern uint8_t SmallFont[];
+  extern uint8_t MediumNumbers[];
+  extern uint8_t BigNumbers[];
+
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -277,39 +279,7 @@ void Scroll(String message)
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void beep(){
-        // notes in the melody:
-        int melody[] = { NOTE_G3 };
-        int noteDurations[] = { 16 };         // note durations: 4 = quarter note, 8 = eighth note, etc.:
-        // iterate over the notes of the melody:
-        for (int thisNote = 0; thisNote < 1; thisNote++) {        // iterate over the notes of the melody:
-          // to calculate the note duration, take one second
-          // divided by the note type.
-          //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
-          int noteDuration = 1000 / noteDurations[thisNote];
-            digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
-          tone(beeper, melody[thisNote], noteDuration);
-     //       digitalWrite(led, HIGH);   // turn the LED on (HIGH is the voltage level)
-            delay(20);               // wait for a second
-            digitalWrite(led, LOW);    // turn the LED off by making the voltage LOW     
-          // to distinguish the notes, set a minimum time between them.
-          // the note's duration + 30% seems to work well:
-          int pauseBetweenNotes = noteDuration * 1.30;
-          delay(pauseBetweenNotes);
-          noTone(beeper);          // stop the tone playing:
-        }
-}
         
-void hello(){
-      drawBox();
-      gotoXY(7,1);
-      LcdString("Nokia 5110");
-      gotoXY(17,2);
-      LcdString("GPS L80");
-      gotoXY(17,3);
-      LcdString("beeper");
-      beep();
-    }
 
 
 //--------------------------------------------------------------------------------------------------------------------------
@@ -323,13 +293,18 @@ void hello(){
       
       //  LCD
       LcdInitialise();
-      LcdClear();
+ //     LcdClear();
       drawBox();
-        
-      //  BEEPER
-      pinMode(beeper, OUTPUT);        // Be careful how relay circuit behave on while resetting or power-cycling your Arduino
-      pinMode(led, OUTPUT);        // Be careful how relay circuit behave on while resetting or power-cycling your Arduino
-      hello();
+   myGLCD.InitLCD();
+      gotoXY(7,1);
+      LcdString("Nokia 5110");
+     
+      gotoXY(17,2);
+      LcdString("GPS L80");   
+     
+      gotoXY(10,3);
+      LcdString("velocimetre");   
+      
     }
 
 
@@ -367,20 +342,37 @@ void hello(){
         Serial.println(gps.date.year());
 
         Serial.print("Hour: ");
-        Serial.print(gps.time.hour()+2); Serial.print(":");  //  HORARI GMT+2
+        Serial.print(gps.time.hour()+1); Serial.print(":");  //  horari espana:    estiu_(GMT+2)     hivern_(GMT+1)
         Serial.print(gps.time.minute()); Serial.print(":");
         Serial.println(gps.time.second());
         Serial.println("---------------------------");
        
-        beep();
+// imprimint al lcd la primera pantalla amb la velocitat 
+
         LcdClear();
         
+    gotoXY(14,5);
+//    LcdString("hora ");
+    char hora [3];-
+    sprintf (hora, "%i", gps.time.hour()+1);  //  horari espana:    estiu_(GMT+2)     hivern_(GMT+1)
+    char minut [3];
+    sprintf (minut, "%i", gps.time.minute());
+    char segon [3];
+    sprintf (segon, "%i", gps.time.second());
+
+    LcdString(hora);
+    LcdString(":");
+    LcdString(minut);
+    LcdString(" :");
+    LcdString(segon);
+       
+
     gotoXY(0,0);
     LcdString("SATS: ");
     char sats [10];  //="12345";
     sprintf (sats, "%i", gps.satellites.value());
     LcdString(sats);
-      
+/*      
     gotoXY(0,1);
     LcdString("lat:");
     char latitud [10];  
@@ -398,33 +390,19 @@ void hello(){
     char alt [6];
     dtostrf(gps.altitude.meters(),7,0,alt);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
     LcdString(alt);
-
-    gotoXY(0,4);  
-    LcdString("Km/h: ");
-    char velocitat [6];
-//    dtostrf(gps.speed.mps(),7,0,velocitat);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
-    dtostrf(gps.speed.mps()*3.6,6,0,velocitat);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
-    LcdString(velocitat);
-//    LcdString("0123456");
-        
-    gotoXY(12,5);
-//    LcdString("hora ");
-    char hora [3];
-    sprintf (hora, "%i", gps.time.hour()+2);  //  horari estiu espana(GMT+2)
-    char minut [3];
-    sprintf (minut, "%i", gps.time.minute());
-    char segon [3];
-    sprintf (segon, "%i", gps.time.second());
-/*     if ((hora)){//&(minut>9)){
-*       gotoXY(16,4);
-*     }
 */
-    LcdString(hora);
-    LcdString(":");
-    LcdString(minut);
-    LcdString(":");
-    LcdString(segon);
-       
+    gotoXY(0,3);  
+    LcdString("Km/h:    ");
+    char velocitat [3];
+    dtostrf(gps.speed.mps()*3.3,3,0,velocitat);     // km/h   //    dtostrf(gps.speed.mps(),7,0,velocitat);     // metres per segon
+    LcdString(velocitat);
+    myGLCD.setFont(BigNumbers);    
+    myGLCD.print(String (velocitat), 42, 15);
+                // void	print(char *st, int x, int y);
+                // void	print(String st, int x, int y);
+                // void	printNumI(long num, int x, int y, int length=0, char filler=' ');
+                // printNumF(double num, byte dec, int x, int y, char divider='.', int length=0, char
+        
         counter = 0;
         c=1;
        }
