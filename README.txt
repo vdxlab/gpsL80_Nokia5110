@@ -2,9 +2,8 @@
 Presenta les dades recollides del gps L80 al display LCD nokia 5110.
 
 - diferents persentacions de les dades al display. 
-  Mitjançant un polsador podriem passar de la 
-	pantalla amb totes les dades a un altre 
-	pantalla només amb la velocitat actual,       i a d'altres pantalles amb diferent info.
+  Mitjançant un polsador passem de la pantalla només amb la velocitat actual,
+	a la pantalla amb totes les dades
 
  ___________________
 |SATS:  8	    |
