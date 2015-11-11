@@ -46,7 +46,7 @@ int scrollPosition = -10;
   extern uint8_t MediumNumbers[];
   extern uint8_t BigNumbers[];
 
-int pantalla=0;
+int pantalla;
 #define boto_dret 2
 #define boto_esquerre 3
 
@@ -308,9 +308,11 @@ void Scroll(String message)
       gotoXY(3,3);
       LcdString("pantalles 2");   
       
-      pinMode(boto_dret, INPUT);
-      pinMode(boto_esquerre, INPUT);
-      
+      pinMode(boto_dret, INPUT_PULLUP);
+      digitalWrite(boto_dret, HIGH);
+      pinMode(boto_esquerre, INPUT_PULLUP);
+      digitalWrite(boto_dret,HIGH);
+   
     }
 
 
@@ -355,13 +357,22 @@ void Scroll(String message)
        
 
         LcdClear();
+ 
+        if (digitalRead(boto_esquerre)==LOW) { pantalla=1 ; Serial.println (pantalla);} 
+        if (digitalRead(boto_dret)==LOW)     {pantalla =0; Serial.println(pantalla);}
 
-        if (digitalRead(boto_dret)==HIGH) { pantalla=1; }
-        if (digitalRead(boto_esquerre)==HIGH) { pantalla=0;} 
-        
-        
+        Serial.print (pantalla);
+     
+// PART COMU A LES DUES PANTALLES        
+
+    gotoXY(0,0);
+    LcdString("SATS: ");
+    char sats [10];  //="12345";
+    sprintf (sats, "%i", gps.satellites.value());
+    LcdString(sats);
+
     gotoXY(14,5);
-//    LcdString("hora ");
+   // LcdString("hora ");
     char hora [3];-
     sprintf (hora, "%i", gps.time.hour()+1);  //  horari espana:    estiu_(GMT+2)     hivern_(GMT+1)
     char minut [3];
@@ -375,13 +386,6 @@ void Scroll(String message)
     LcdString(" :");
     LcdString(segon);
        
-
-    gotoXY(0,0);
-    LcdString("SATS: ");
-    char sats [10];  //="12345";
-    sprintf (sats, "%i", gps.satellites.value());
-    LcdString(sats);
-
     
     switch (pantalla) {
     case 0:
@@ -420,7 +424,7 @@ void Scroll(String message)
     dtostrf(gps.altitude.meters(),7,0,alt);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
     LcdString(alt);
 
-    gotoXY(0,3);  
+    gotoXY(0,4);  
     LcdString("Km/h:    ");
     char velocitat [3];
     dtostrf(gps.speed.mps()*3.3,3,0,velocitat);     // km/h   //    dtostrf(gps.speed.mps(),7,0,velocitat);     // metres per segon
