@@ -46,7 +46,8 @@ int scrollPosition = -10;
   extern uint8_t MediumNumbers[];
   extern uint8_t BigNumbers[];
 
-int pantalla;
+// per jugar amb els polsadors per canviar la pantalla mostrada
+volatile int pantalla;
 #define boto_dret 2
 #define boto_esquerre 3
 
@@ -283,6 +284,15 @@ void Scroll(String message)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         
+void polsador_esquerre() 
+{
+    pantalla=1 ;// Serial.println (pantalla);// aquet serial.print pot fer que es pengi l'arduino.... OJO !!!!
+}
+        
+void polsador_dret() 
+{
+    pantalla=0 ; //Serial.println (pantalla);// aquet serial.print pot fer que es pengi l'arduino.... OJO !!!!
+}
 
 
 //--------------------------------------------------------------------------------------------------------------------------
@@ -297,8 +307,8 @@ void Scroll(String message)
       //  LCD
       LcdInitialise();
  //     LcdClear();
-      drawBox();
    myGLCD.InitLCD();
+      drawBox();
       gotoXY(7,1);
       LcdString("Nokia 5110");
      
@@ -312,6 +322,9 @@ void Scroll(String message)
       digitalWrite(boto_dret, HIGH);
       pinMode(boto_esquerre, INPUT_PULLUP);
       digitalWrite(boto_dret,HIGH);
+   
+      attachInterrupt(0, polsador_dret, FALLING);
+      attachInterrupt(1, polsador_esquerre, FALLING);
    
     }
 
@@ -328,116 +341,115 @@ void Scroll(String message)
       }
       
       while(gpsSerial.available()){ // check for gps data
-       if(gps.encode(gpsSerial.read())){ // encode gps data
-//       if(counter > 50) {  // uns 8s 
-       if(counter > 1) {     // uns 1s
-        Serial.println("");
-        Serial.println("---------------------------");
-        Serial.print("SATS: ");
-        Serial.println(gps.satellites.value());
-        Serial.print("LAT: ");
-        Serial.println(gps.location.lat(), 6);
-        Serial.print("LONG: ");
-        Serial.println(gps.location.lng(), 6);
-        Serial.print("ALT: ");
-        Serial.println(gps.altitude.meters());
-        Serial.print("SPEED: ");
-        Serial.println(gps.speed.mps()*3.6); //  km/h
-
-        Serial.print("Date: ");
-        Serial.print(gps.date.day()); Serial.print("/");
-        Serial.print(gps.date.month()); Serial.print("/");
-        Serial.println(gps.date.year());
-
-        Serial.print("Hour: ");
-        Serial.print(gps.time.hour()+1); Serial.print(":");  //  horari espana:    estiu_(GMT+2)     hivern_(GMT+1)
-        Serial.print(gps.time.minute()); Serial.print(":");
-        Serial.println(gps.time.second());
-        Serial.println("---------------------------");
+        if(gps.encode(gpsSerial.read())){ // encode gps data
+   //       if(counter > 50) {  // uns 8s 
+          if(counter > 1) {     // uns 1s
+           Serial.println("");
+           Serial.println("---------------------------");
+           Serial.print("SATS: ");
+           Serial.println(gps.satellites.value());
+           Serial.print("LAT: ");
+           Serial.println(gps.location.lat(), 6);
+           Serial.print("LONG: ");
+           Serial.println(gps.location.lng(), 6);
+           Serial.print("ALT: ");
+           Serial.println(gps.altitude.meters());
+           Serial.print("SPEED: ");
+           Serial.println(gps.speed.mps()*3.6); //  km/h
+   
+           Serial.print("Date: ");
+           Serial.print(gps.date.day()); Serial.print("/");
+           Serial.print(gps.date.month()); Serial.print("/");
+           Serial.println(gps.date.year());
+   
+           Serial.print("Hour: ");
+           Serial.print(gps.time.hour()+1); Serial.print(":");  //  horari espana:    estiu_(GMT+2)     hivern_(GMT+1)
+           Serial.print(gps.time.minute()); Serial.print(":");
+           Serial.println(gps.time.second());
+           Serial.println("---------------------------");
+           Serial.print (pantalla);
+           Serial.println("---");
+         
+   
+           LcdClear();
+   
+        // PART COMU A LES DUES PANTALLES        
+   
+           gotoXY(0,0);
+           LcdString("SATS: ");
+           char sats [10];  //="12345";
+           sprintf (sats, "%i", gps.satellites.value());
+           LcdString(sats);
        
-
-        LcdClear();
- 
-        if (digitalRead(boto_esquerre)==LOW) { pantalla=1 ; Serial.println (pantalla);} 
-        if (digitalRead(boto_dret)==LOW)     {pantalla =0; Serial.println(pantalla);}
-
-        Serial.print (pantalla);
-     
-// PART COMU A LES DUES PANTALLES        
-
-    gotoXY(0,0);
-    LcdString("SATS: ");
-    char sats [10];  //="12345";
-    sprintf (sats, "%i", gps.satellites.value());
-    LcdString(sats);
-
-    gotoXY(14,5);
-   // LcdString("hora ");
-    char hora [3];-
-    sprintf (hora, "%i", gps.time.hour()+1);  //  horari espana:    estiu_(GMT+2)     hivern_(GMT+1)
-    char minut [3];
-    sprintf (minut, "%i", gps.time.minute());
-    char segon [3];
-    sprintf (segon, "%i", gps.time.second());
-
-    LcdString(hora);
-    LcdString(":");
-    LcdString(minut);
-    LcdString(" :");
-    LcdString(segon);
+           gotoXY(14,5);
+          // LcdString("hora ");
+           char hora [3];-
+           sprintf (hora, "%i", gps.time.hour()+1);  //  horari espana:    estiu_(GMT+2)     hivern_(GMT+1)
+           char minut [3];
+           sprintf (minut, "%i", gps.time.minute());
+           char segon [3];
+           sprintf (segon, "%i", gps.time.second());
        
-    
-    switch (pantalla) {
-    case 0:
-// imprimint al lcd la primera pantalla amb la velocitat 
-
-    gotoXY(0,3);  
-    LcdString("Km/h:    ");
-    char VELOCITAT [3];
-    dtostrf(gps.speed.mps()*3.3,3,0,VELOCITAT);     // km/h   //    dtostrf(gps.speed.mps(),7,0,velocitat);     // metres per segon
-    myGLCD.setFont(BigNumbers);                    
-    myGLCD.print(String (VELOCITAT), 42, 15);    //    myGLCD.print(String velocitat, int x, int y);
-                                                  // void	print(char *st, int x, int y);
-                                                  // void	print(String st, int x, int y);
-                                                  // void	printNumI(long num, int x, int y, int length=0, char filler=' ');
-                                                  // printNumF(double num, byte dec, int x, int y, char divider='.', int length=0, char    gotoXY(14,5);
-     break;
-
-     case 1:
-// imprimint al lcd la segona pantalla amb totes les dades
+           LcdString(hora);
+           LcdString(":");
+           LcdString(minut);
+           LcdString(" :");
+           LcdString(segon);
+             
+          
+           switch (pantalla) {
+           case 0:
       
-    gotoXY(0,1);
-    LcdString("lat:");
-    char latitud [10];  
-    dtostrf(gps.location.lat(),6,5,latitud);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
-    LcdString(latitud);
+        // imprimint al lcd la primera pantalla amb la velocitat 
+       
+           gotoXY(0,3);  
+           LcdString("Km/h:    ");
+           char VELOCITAT [3];
+           dtostrf(gps.speed.mps()*3.3,3,0,VELOCITAT);     // km/h   //    dtostrf(gps.speed.mps(),7,0,velocitat);     // metres per segon
+           myGLCD.setFont(BigNumbers);                    
+           myGLCD.print(String (VELOCITAT), 42, 15);    //    myGLCD.print(String velocitat, int x, int y);
+                                                        // void	print(char *st, int x, int y);
+                                                        // void	print(String st, int x, int y);
+                                                        // void	printNumI(long num, int x, int y, int length=0, char filler=' ');
+                                                        // printNumF(double num, byte dec, int x, int y, char divider='.', int length=0, char    gotoXY(14,5);
+           break;
       
-    gotoXY(0,2); 
-    LcdString("lon:");
-    char longitud [10];  //="12345";
-    dtostrf(gps.location.lng(),8,5,longitud);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
-    LcdString(longitud); 
-
-    gotoXY(0,3);
-    LcdString("alt: ");
-    char alt [6];
-    dtostrf(gps.altitude.meters(),7,0,alt);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
-    LcdString(alt);
-
-    gotoXY(0,4);  
-    LcdString("Km/h:    ");
-    char velocitat [3];
-    dtostrf(gps.speed.mps()*3.3,3,0,velocitat);     // km/h   //    dtostrf(gps.speed.mps(),7,0,velocitat);     // metres per segon
-    LcdString(velocitat);
-    
-    break;
-    }    
-        counter = 0;
-        c=1;
-       }
-       else counter++;
-
-       }
-      }
-    }
+           case 1:
+        // imprimint al lcd la segona pantalla amb totes les dades
+            
+           gotoXY(0,1);
+           LcdString("lat:");
+           char latitud [10];  
+           dtostrf(gps.location.lat(),6,5,latitud);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
+           LcdString(latitud);
+             
+           gotoXY(0,2); 
+           LcdString("lon:");
+           char longitud [10];  //="12345";
+           dtostrf(gps.location.lng(),8,5,longitud);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
+           LcdString(longitud); 
+      
+           gotoXY(0,3);
+           LcdString("alt: ");
+           char alt [6];
+           dtostrf(gps.altitude.meters(),7,0,alt);     // dtostrf(float_a_convertir, digits_totals, digits_despres_dela_coma, string_convertida); // #include stdlib.h
+           LcdString(alt);
+      
+           gotoXY(0,4);  
+           LcdString("Km/h:    ");
+           char velocitat [3];
+           dtostrf(gps.speed.mps()*3.3,3,0,velocitat);     // km/h   //    dtostrf(gps.speed.mps(),7,0,velocitat);     // metres per segon
+           LcdString(velocitat);
+          
+           break;
+           }
+          
+           counter = 0;
+           c=1;
+          }                        // if linea 346
+          else counter++;
+  
+        }                       // if linea 345
+      }                          // if linea 344
+    }                            // while linea 343
 
